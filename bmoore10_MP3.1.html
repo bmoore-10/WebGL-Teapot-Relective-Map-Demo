@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<title>bmoore10_MP3.1 </title>
+<meta charset="utf-8">
+</head>
+
+
+<script id="shader-vs" type="x-shader/x-vertex">
+   attribute vec3 aVertexNormal;
+   attribute vec3 aVertexPosition;
+   attribute vec2 aTexCoord;
+   attribute float aFace;
+
+   uniform mat4 uMVMatrix;
+   uniform mat4 uPMatrix;
+
+   varying vec2 vTexCoord;
+   varying float vFace;
+
+   void main(void) {
+     gl_Position = uPMatrix*uMVMatrix*vec4(aVertexPosition, 1.0);
+     vTexCoord=aTexCoord;
+     vFace = aFace;
+    }
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+precision mediump float;
+
+// Passed in from the vertex shader.
+varying vec2 vTexCoord;
+varying float vFace;
+
+// The texture.
+uniform sampler2D front;
+uniform sampler2D back;
+uniform sampler2D top;
+uniform sampler2D bottom;
+uniform sampler2D right;
+uniform sampler2D left;
+
+void main() {
+   //gl_FragColor = texture2D(uSampler, vTexCoord);
+   //gl_FragColor = //vec4(vTexCoord.x,vTexCoord.y,0.0,1.0);
+   if(vFace < 0.1)
+        gl_FragColor = texture2D(front, vTexCoord);
+   else if(vFace < 1.1)
+        gl_FragColor = texture2D(back, vTexCoord);
+   else if(vFace < 2.1)
+        gl_FragColor = texture2D(top, vTexCoord);
+   else if(vFace < 3.1)
+        gl_FragColor = texture2D(bottom, vTexCoord);
+   else if(vFace < 4.1)
+        gl_FragColor = texture2D(right, vTexCoord);
+   else
+        gl_FragColor = texture2D(left, vTexCoord);
+}
+</script>
+
+<script src="gl-matrix.js"></script>
+<script src="webgl-utils.js"></script>
+<script src="terrainModeling.js"></script>
+<script src="bmoore10_MP3.1.js"></script>
+<body onload="startup();">
+<canvas id="myGLCanvas" width="800" height="800"></canvas>
+</body>
+</html>
