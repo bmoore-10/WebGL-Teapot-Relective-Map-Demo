@@ -692,8 +692,9 @@ var teapotFaceArray = [];
      var teapotNoReturns = teapotInfo.replace(/\n/g, " ");
      var teapotReadyForParse = teapotNoReturns.split(" ");
      var vOri = 0;
+     var doWrite = 1;
 
-     console.log(teapotInfo);
+     //console.log(teapotReadyForParse);
 
      for(var i = 0; i < teapotReadyForParse.length; i++){
          if(teapotReadyForParse[i] == ""){
@@ -704,11 +705,18 @@ var teapotFaceArray = [];
         }else if(teapotReadyForParse[i] == "f"){
             vOri = 1;
             //console.log("got an f");
+        }else if(teapotReadyForParse[i] == "#"){
+            doWrite = 0;
+        }else if(teapotReadyForParse[i] == "g"){
+            doWrite = 0;
+            console.log("got g");
+        }else if(isNaN(teapotReadyForParse[i]) ){
+            doWrite = 0;
         }else{
 
-            if(vOri == 0){
+            if(vOri == 0 && doWrite = 1){
                 teapotVertexArray.push(teapotReadyForParse[i]);
-            }else{
+            }else if(doWrite == 1){
                 teapotFaceArray.push(teapotReadyForParse[i]);
             }
 
