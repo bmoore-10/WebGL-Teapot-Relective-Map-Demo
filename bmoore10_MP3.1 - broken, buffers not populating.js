@@ -36,7 +36,7 @@ var cubeImage;
 var cubeTexture;
 
 // For animation
-var then = 0;
+var then =0;
 var modelXRotationRadians = degToRad(0);
 var modelYRotationRadians = degToRad(0);
 
@@ -300,8 +300,7 @@ function drawTeapot(){
     gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotFaceBuffer);
-    setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, 6765, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES,  teapotFaceBuffer.numitems, gl.UNSIGNED_SHORT, 0);
 
 }
 
@@ -386,7 +385,7 @@ function draw() {
     //Draw the teapot
     setupTeapotShader();
     mvPushMatrix();
-    vec3.set(transformVec, 0.0, 0.0, -8.0);
+    vec3.set(transformVec, 0.0, 0.0, 0.0);
     mat4.translate(mvMatrix, mvMatrix, transformVec);
     mat4.rotateX(mvMatrix, mvMatrix, modelXRotationRadians);
     mat4.rotateY(mvMatrix, mvMatrix, modelYRotationRadians);
@@ -424,7 +423,6 @@ function animate() {
 
         //Animate the rotation
         //modelXRotationRadians += 1.2 * deltaTime;
-        modelXRotationRadians = degToRad(0);
         modelYRotationRadians += 1.0 * deltaTime;
     }
 }
@@ -512,9 +510,37 @@ function setupBuffers() {
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
+  //Create a buffer for the teapot's vertices
+  teapotVertexBuffer = gl.createBuffer();
+
+  //Select the teapotVertexBuffer as the one to apply vertex operations to from here on out
+  gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBuffer);
+
+  //Now pass the list of vertices into webgl to build the shape.
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotVertexArray), gl.STATIC_DRAW);
+
+
+  //Build the element array buffer for the teapot
+  teapotFaceBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotFaceBuffer);
 
 
 
+  //Now send the element array to GL
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(teapotFaceArray), gl.STATIC_DRAW);
+  teapotFaceBuffer.itemsize = 1;
+  teapotFaceBuffer.numItems = ( (teapotFaceArray.legnth) / 3);
+
+
+  //Create buffer for teapot's normals
+  teapotNormalBuffer = gl.createBuffer();
+
+  //Select normal buffer as one to apply operations to
+  gl.bindBuffer(gl.ARRAY_BUFFER, teapotNormalBuffer);
+
+  var testArray = [1,2];
+  //Now pass the list of normals into webgl to build the shape
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotNormalArray), gl.STATIC_DRAW);
 
 
   // Map the texture onto the cube's faces.
@@ -691,9 +717,8 @@ var teapotFaceArray = [];
  function importTeaPot(teapotInfo){
      var teapotNoReturns = teapotInfo.replace(/\n/g, " ");
      var teapotReadyForParse = teapotNoReturns.split(" ");
-     var vOri = 0;
 
-     console.log(teapotInfo);
+     var vOri = 0;
 
      for(var i = 0; i < teapotReadyForParse.length; i++){
          if(teapotReadyForParse[i] == ""){
@@ -705,7 +730,6 @@ var teapotFaceArray = [];
             vOri = 1;
             //console.log("got an f");
         }else{
-
             if(vOri == 0){
                 teapotVertexArray.push(teapotReadyForParse[i]);
             }else{
@@ -721,33 +745,9 @@ var teapotFaceArray = [];
          teapotNormalArray[i] = 1;
      }
 
-   //Build the element array buffer for the teapot
-   teapotFaceBuffer = gl.createBuffer();
-   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotFaceBuffer);
 
-   //Now send the element array to GL
-   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(teapotFaceArray), gl.STATIC_DRAW);
-
-   // //Create buffer for teapot's normals
-    teapotNormalBuffer = gl.createBuffer();
-
-   // //Select normal buffer as one to apply operations to
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotNormalBuffer);
-
-   // //Now pass the list of normals into webgl to build the shape
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotNormalArray), gl.STATIC_DRAW);
-
-    //Create a buffer for the teapot's vertices
-    teapotVertexBuffer = gl.createBuffer();
-
-    //Select the teapotVertexBuffer as the one to apply vertex operations to from here on out
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBuffer);
-
-    //Now pass the list of vertices into webgl to build the shape.
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotVertexArray), gl.STATIC_DRAW);
 
  }
-
 
 /**
  * Startup function called from html code to start program.
@@ -765,6 +765,8 @@ var teapotFaceArray = [];
   cubeTexSetup();
   setupBuffers();
 
+
+  draw();
   tick();
 }
 

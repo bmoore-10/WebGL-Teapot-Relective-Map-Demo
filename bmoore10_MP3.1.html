@@ -6,7 +6,7 @@
 </head>
 
 
-<script id="shader-vs" type="x-shader/x-vertex">
+<script id="cubeShader-vs" type="x-shader/x-vertex">
    attribute vec3 aVertexNormal;
    attribute vec3 aVertexPosition;
    attribute vec2 aTexCoord;
@@ -25,7 +25,7 @@
     }
 </script>
 
-<script id="shader-fs" type="x-shader/x-fragment">
+<script id="cubeShader-fs" type="x-shader/x-fragment">
 precision mediump float;
 
 // Passed in from the vertex shader.
@@ -58,10 +58,86 @@ void main() {
 }
 </script>
 
+<script id="teapotShader-vs" type="x-shader/x-vertex">
+attribute vec3 teapotVertices;
+attribute vec3 teapotNormals;
+
+  uniform mat4 uMVMatrix;
+  uniform mat4 uPMatrix;
+  uniform mat3 uNMatrix;
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+
+  void main(void){
+
+      //Get the vertex position in eye textureCoordinates
+      vec4 vertexPositionEye4 = uMVMatrix * vec4(teapotVertices, 1.0);
+      vPosition = vertexPositionEye4.xyz / vertexPositionEye4.w;
+      //Calculate the normal
+      vNormal = normalize(uNMatrix * teapotNormals);
+
+      gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
+
+  }
+
+
+</script>
+
+<script id="teapotShader-fs" type="x-shader/x-fragment">
+precision mediump float;
+varying vec3 vNormal;
+varying vec3 vPosition;
+
+uniform vec3 uLightPosition;
+uniform vec3 uAmbientLightColor;
+uniform vec3 uDiffuseLightColor;
+uniform vec3 uSpecularLightColor;
+uniform vec3 uAmbientMaterialColor;
+uniform vec3 uDiffuseMaterialColor;
+uniform vec3 uSpecularMaterialColor;
+uniform float uShininess;
+
+void main(void) {
+
+    vec4 vColor;
+    // Calculate the vector (l) to the light source
+    vec3 vectorToLightSource = normalize(uLightPosition - vPosition);
+
+    // Calculate n dot l for diffuse lighting
+    float diffuseLightWeightning = max(dot(vNormal,
+                                    vectorToLightSource), 0.0);
+
+    // Calculate the reflection vector (r) that is needed for specular light
+    vec3 reflectionVector = normalize(reflect(-vectorToLightSource,
+                                             vNormal));
+
+    // The camera in eye coordinates is located in the origin and is pointing
+    // along the negative z-axis. Calculate viewVector (v)
+    // in eye coordinates as:
+    // (0.0, 0.0, 0.0) - vertexPositionEye3
+    vec3 viewVectorEye = -normalize(vPosition);
+
+    float rdotv = max(dot(reflectionVector, viewVectorEye), 0.0);
+
+    float specularLightWeightning = pow(rdotv, uShininess);
+
+    // Sum up all three reflection components and send to the fragment shader
+    vColor = vec4(((uAmbientLightColor*uAmbientMaterialColor)
+                + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
+                + (uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning),1.0);
+
+    gl_FragColor = vec4(1.0, .41, 0.70, 1.0);
+    //gl_FragColor = vColor;
+ }
+
+</script>
+
+
 <script src="gl-matrix.js"></script>
 <script src="webgl-utils.js"></script>
 <script src="terrainModeling.js"></script>
 <script src="bmoore10_MP3.1.js"></script>
+<script src="readText.js"></script>
 <body onload="startup();">
 <canvas id="myGLCanvas" width="800" height="800"></canvas>
 </body>
