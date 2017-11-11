@@ -349,10 +349,19 @@ function setupTeapotShader(){
 }
 
 //View parameters
-var eyePt = vec3.fromValues(0.0, 0.0, 0.0);
+var eyePt = vec3.fromValues(0.0, 0.1, 1.0);
 var viewDir = vec3.fromValues(0.0, 0.0, -1.0);
 var up = vec3.fromValues(0.0, 1.0, 0.0);
 var  viewPt = vec3.fromValues(0.0, 0.0, 0.0);
+
+vec2.add(viewPt, eyePt, viewDir);
+// Then generate the lookat matrix and initialize the MV matrix to that view
+mat4.lookAt(mvMatrix,eyePt,viewPt,up);
+
+//Construct quaternion that records initial/current orientation
+var currentRotation = quat;
+//obtain initial rotation value from original lookat
+mat4.getRotation(currentRotation, mvMatrix);
 
 /**
  * Draw call that applies matrix transformations to cube
@@ -366,15 +375,31 @@ function draw() {
     // We'll use perspective
     mat4.perspective(pMatrix,degToRad(45), gl.viewportWidth / gl.viewportHeight, 0.1, 200.0);
 
-    vec3.add(viewPt, eyePt, viewDir);
-    // Then generate the lookat matrix and initialize the MV matrix to that view
-    mat4.lookAt(mvMatrix,eyePt,viewPt,up);
 
+    //Capture rotation
+    var newRot = quat;
+    quat.fromEuler(newRot, 0, orbitLeft, 0);
+
+    //Apply rotation to current orientation
+    quat.multiply(currentRotation, currentRotation, newRot);
+
+    //Apply rotation to light position
+    //vec3.transformQuat(lightPos, lightPos, newRot);
+
+    //Create rotation matrix from current rotation
+    //var rotationMatrix = mat4;
+    //mat4.fromQuat(rotationMatrix, currentRotation);
+
+    //Apply rotation to mvMatrix
+    //mat4.multiply(mvMatrix, rotationMatrix, mvMatrix);
+
+
+    mat4.rotateY(mvMatrix, mvMatrix, degToRad(orbitLeft));
 
     //Draw the cube
     setupCubeShader();
     mvPushMatrix();
-    vec3.set(transformVec,0.0,0.0, -1.0);
+    vec3.set(transformVec,0.0,0.0, 0.0);
     mat4.translate(mvMatrix, mvMatrix,transformVec);
     mat4.rotateX(mvMatrix,mvMatrix,modelXRotationRadians);
     mat4.rotateY(mvMatrix,mvMatrix,modelYRotationRadians);
@@ -386,14 +411,16 @@ function draw() {
     //Draw the teapot
     setupTeapotShader();
     mvPushMatrix();
-    vec3.set(transformVec, 0.0, -0.1, -1.0);
+    vec3.set(transformVec, 0.0, 0.0, 0.0);
     mat4.translate(mvMatrix, mvMatrix, transformVec);
     mat4.rotateX(mvMatrix, mvMatrix, modelXRotationRadiansTeapot);
     mat4.rotateY(mvMatrix, mvMatrix, modelYRotationRadiansTeapot);
 
     R=1.0; G=0.0; B=0.0; shiny=50.0;
 
-    uploadLightsToShader([1,1,1],[0.0,0.0,0.0],[1.0,1.0,1.0],[1.0,1.0,1.0]);
+
+
+    uploadLightsToShader([lightPos[0], lightPos[1], lightPos[2]],[0.0,0.0,0.0],[1.0,1.0,1.0],[1.0,1.0,1.0]);
     uploadMaterialToShader([R,G,B],[R,G,B],[1.0,1.0,1.0],shiny);
 
     setMatrixUniforms();
@@ -401,10 +428,12 @@ function draw() {
 
     drawTeapot();
     mvPopMatrix();
-
+    //console.log(lightPos);
 }
-var modelYRotationRadiansTeapot = degToRad(0);
+var lightPos = vec3.fromValues(1, 1, 1);
 var modelXRotationRadiansTeapot = degToRad(0);
+var modelYRotationRadiansTeapot = degToRad(0);
+
 /**
  * Animation to be called from tick. Updates global rotation values.
  */
@@ -426,10 +455,28 @@ function animate() {
         //Animate the rotation
         //modelXRotationRadians += 1.2 * deltaTime;
         //modelXRotationRadians = degToRad(15);
-        modelYRotationRadians += 1 * deltaTime;
-        modelYRotationRadiansTeapot += 1 * deltaTime;
+        modelYRotationRadians += 0 * deltaTime;
+        modelYRotationRadiansTeapot += 0 * deltaTime;
 
     }
+}
+var orbitLeft = 0;
+
+//Handles input from user
+function handleKeys(){
+document.onkeydown = keyDown;
+document.onkeyup = keyUp;
+    function keyDown(){
+        if(event.key == "ArrowRight")
+            orbitLeft = 1;
+        if(event.key == "ArrowLeft")
+            orbitLeft = -1;
+    }
+
+    function keyUp(){
+        orbitLeft = 0;
+    }
+
 }
 
 /**
@@ -716,7 +763,6 @@ var teapotFaceArray = [];
         }else if(isNaN(teapotReadyForParse[i]) ){
             doWrite = 0;
         }else{
-
             if(vOri == 0 && doWrite == 1){
                 teapotVertexArray.push(teapotReadyForParse[i] *.05);
                 //teapotVertexArray.push(teapotReadyForParse[i]);
@@ -746,9 +792,12 @@ var teapotFaceArray = [];
                                                  teapotVertexArray[i+2]) );
      }
      var vertexNormals = [];
+     var normalizedNormals = [];
      for(var i = 0; i < teapotVertexArray.length/3; i++){
-         vertexNormals[i] = (vec3.fromValues(0,0,0));
+         vertexNormals.push( (vec3.fromValues(0,0,0)));
      }
+     //console.log("vertexArray length: ", vertexArrayVectors.length);
+     //console.log(vertexArrayVectors);
      //Calculating normals
      for(var i = 0; i < teapotFaceArray.length; i+=3){
          var pointOne = vertexArrayVectors[teapotFaceArray[i]];
@@ -769,17 +818,24 @@ var teapotFaceArray = [];
          vec3.add(vertexNormals[teapotFaceArray[i+1]], vertexNormals[teapotFaceArray[i+1]], currNorm);
          vec3.add(vertexNormals[teapotFaceArray[i+2]], vertexNormals[teapotFaceArray[i+2]], currNorm);
      }
+     //console.log(vertexNormals);
+     //console.log(vertexNormals);
      //Each vertex now has a normal. We must normalize the normals
      for(var i = 0; i < vertexNormals.length; i++){
-         vec3.normalize(vertexNormals[i], vertexNormals[i]);
+         var tempVec = vec3.fromValues(0,0,0);
+         vec3.normalize(tempVec, vertexNormals[i]);
+
+         normalizedNormals.push(tempVec);
      }
+     //console.log(normalizedNormals);
      //console.log(vertexNormals.length);
      //Finally, pass them to the normal array
-     for(var i = 0; i < vertexNormals.length; i++){
-         teapotNormalArray.push(vertexNormals[i][0]);
-         teapotNormalArray.push(vertexNormals[i][1]);
-         teapotNormalArray.push(vertexNormals[i][2]);
+     for(var i = 0; i < normalizedNormals.length; i++){
+         teapotNormalArray.push(normalizedNormals[i][0]);
+         teapotNormalArray.push(normalizedNormals[i][1]);
+         teapotNormalArray.push(normalizedNormals[i][2]);
      }
+     //console.log(vertexNormals);
      //console.log(teapotNormalArray);
 
      //Create a buffer for the teapot's vertices
@@ -834,7 +890,8 @@ var teapotFaceArray = [];
  * Tick called for every animation frame.
  */
 function tick() {
-    requestAnimFrame(tick);
+        handleKeys();
+        requestAnimFrame(tick);
         draw();
         animate();
 }

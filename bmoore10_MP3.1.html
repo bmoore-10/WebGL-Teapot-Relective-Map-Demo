@@ -75,6 +75,7 @@ attribute vec3 teapotNormals;
       vPosition = vertexPositionEye4.xyz / vertexPositionEye4.w;
       //Calculate the normal
       vNormal = normalize(uNMatrix * teapotNormals);
+      //vNormal = teapotNormals;
 
       gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
       //gl_Position = vec4(teapotVertices, 1.0);
