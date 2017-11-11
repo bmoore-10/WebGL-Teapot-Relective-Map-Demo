@@ -77,6 +77,7 @@ attribute vec3 teapotNormals;
       vNormal = normalize(uNMatrix * teapotNormals);
 
       gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
+      //gl_Position = vec4(teapotVertices, 1.0);
 
   }
 
@@ -126,8 +127,8 @@ void main(void) {
                 + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
                 + (uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning),1.0);
 
-    gl_FragColor = vec4(1.0, .41, 0.70, 1.0);
-    //gl_FragColor = vColor;
+    //gl_FragColor = vec4(vNormal.x, vNormal.y, vNormal.z, 1.0);
+    gl_FragColor = vColor;
  }
 
 </script>

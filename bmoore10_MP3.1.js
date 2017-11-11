@@ -301,15 +301,10 @@ function drawTeapot(){
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotFaceBuffer);
     setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, 6765, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, 6768, gl.UNSIGNED_SHORT, 0);
 
 }
 
-//View parameters
-var eyePt = vec3.fromValues(0.0, 0.0, -1.0);
-var viewDir = vec3.fromValues(0.0, 0.0, -1.0);
-var up = vec3.fromValues(0.0, 1.0, 0.0);
-var  viewPt = vec3.fromValues(0.0, 0.0, 0.0);
 
 //Create normal for teapot
 var nTeapotMatrix = mat3.create();
@@ -353,6 +348,12 @@ function setupTeapotShader(){
 
 }
 
+//View parameters
+var eyePt = vec3.fromValues(0.0, 0.0, 0.0);
+var viewDir = vec3.fromValues(0.0, 0.0, -1.0);
+var up = vec3.fromValues(0.0, 1.0, 0.0);
+var  viewPt = vec3.fromValues(0.0, 0.0, 0.0);
+
 /**
  * Draw call that applies matrix transformations to cube
  */
@@ -365,33 +366,32 @@ function draw() {
     // We'll use perspective
     mat4.perspective(pMatrix,degToRad(45), gl.viewportWidth / gl.viewportHeight, 0.1, 200.0);
 
-    /*
+    vec3.add(viewPt, eyePt, viewDir);
+    // Then generate the lookat matrix and initialize the MV matrix to that view
+    mat4.lookAt(mvMatrix,eyePt,viewPt,up);
 
-        Add stuff for phong shading here
-
-    */
 
     //Draw the cube
-    //setupCubeShader();
-    //mvPushMatrix();
-    //vec3.set(transformVec,0.0,0.0,-1.0);
-    //mat4.translate(mvMatrix, mvMatrix,transformVec);
-    //mat4.rotateX(mvMatrix,mvMatrix,modelXRotationRadians);
-    //mat4.rotateY(mvMatrix,mvMatrix,modelYRotationRadians);
-    //setMatrixUniforms();
-    //drawCube();
-    //mvPopMatrix();
+    setupCubeShader();
+    mvPushMatrix();
+    vec3.set(transformVec,0.0,0.0, -1.0);
+    mat4.translate(mvMatrix, mvMatrix,transformVec);
+    mat4.rotateX(mvMatrix,mvMatrix,modelXRotationRadians);
+    mat4.rotateY(mvMatrix,mvMatrix,modelYRotationRadians);
+    setMatrixUniforms();
+    drawCube();
+    mvPopMatrix();
 
 
     //Draw the teapot
     setupTeapotShader();
     mvPushMatrix();
-    vec3.set(transformVec, 0.0, 0.0, -8.0);
+    vec3.set(transformVec, 0.0, -0.1, -1.0);
     mat4.translate(mvMatrix, mvMatrix, transformVec);
-    mat4.rotateX(mvMatrix, mvMatrix, modelXRotationRadians);
-    mat4.rotateY(mvMatrix, mvMatrix, modelYRotationRadians);
+    mat4.rotateX(mvMatrix, mvMatrix, modelXRotationRadiansTeapot);
+    mat4.rotateY(mvMatrix, mvMatrix, modelYRotationRadiansTeapot);
 
-    R=1.0; G=0.0; B=0.0; shiny=0.0;
+    R=1.0; G=0.0; B=0.0; shiny=50.0;
 
     uploadLightsToShader([1,1,1],[0.0,0.0,0.0],[1.0,1.0,1.0],[1.0,1.0,1.0]);
     uploadMaterialToShader([R,G,B],[R,G,B],[1.0,1.0,1.0],shiny);
@@ -403,7 +403,8 @@ function draw() {
     mvPopMatrix();
 
 }
-
+var modelYRotationRadiansTeapot = degToRad(0);
+var modelXRotationRadiansTeapot = degToRad(0);
 /**
  * Animation to be called from tick. Updates global rotation values.
  */
@@ -424,8 +425,10 @@ function animate() {
 
         //Animate the rotation
         //modelXRotationRadians += 1.2 * deltaTime;
-        modelXRotationRadians = degToRad(0);
-        modelYRotationRadians += 1.0 * deltaTime;
+        //modelXRotationRadians = degToRad(15);
+        modelYRotationRadians += 1 * deltaTime;
+        modelYRotationRadiansTeapot += 1 * deltaTime;
+
     }
 }
 
@@ -695,39 +698,98 @@ var teapotFaceArray = [];
      var doWrite = 1;
 
      //console.log(teapotReadyForParse);
-
      for(var i = 0; i < teapotReadyForParse.length; i++){
          if(teapotReadyForParse[i] == ""){
             //console.log("found a blank");
         }else if(teapotReadyForParse[i] == "v"){
             vOri = 0;
+            doWrite = 1;
             //console.log("got a v");
         }else if(teapotReadyForParse[i] == "f"){
             vOri = 1;
+            doWrite = 1;
             //console.log("got an f");
         }else if(teapotReadyForParse[i] == "#"){
             doWrite = 0;
         }else if(teapotReadyForParse[i] == "g"){
             doWrite = 0;
-            console.log("got g");
         }else if(isNaN(teapotReadyForParse[i]) ){
             doWrite = 0;
         }else{
 
-            if(vOri == 0 && doWrite = 1){
-                teapotVertexArray.push(teapotReadyForParse[i]);
+            if(vOri == 0 && doWrite == 1){
+                teapotVertexArray.push(teapotReadyForParse[i] *.05);
+                //teapotVertexArray.push(teapotReadyForParse[i]);
             }else if(doWrite == 1){
-                teapotFaceArray.push(teapotReadyForParse[i]);
+                teapotFaceArray.push(teapotReadyForParse[i] - 1);
             }
 
         }
      }
 
+
      //Teapot vertex and face arrays are now popualted according to the order in the original object file
      //Need to get teapotNormals
+/*
      for (var i = 0; i < teapotVertexArray.length; i++){
          teapotNormalArray[i] = 1;
      }
+*/
+
+
+     var vertexArrayVectors = [];
+
+     //The following loop will store the vertices as single vectors
+     for(var i = 0; i < teapotVertexArray.length; i+=3){
+         vertexArrayVectors.push(vec3.fromValues(teapotVertexArray[i],
+                                                 teapotVertexArray[i+1],
+                                                 teapotVertexArray[i+2]) );
+     }
+     var vertexNormals = [];
+     for(var i = 0; i < teapotVertexArray.length/3; i++){
+         vertexNormals[i] = (vec3.fromValues(0,0,0));
+     }
+     //Calculating normals
+     for(var i = 0; i < teapotFaceArray.length; i+=3){
+         var pointOne = vertexArrayVectors[teapotFaceArray[i]];
+         var pointTwo = vertexArrayVectors[teapotFaceArray[i+1]];
+         var pointThree = vertexArrayVectors[teapotFaceArray[i+2]];
+
+         var vectorU = vec3.fromValues(0,0,0);
+         var vectorV = vec3.fromValues(0,0,0);
+
+         vec3.sub(vectorU, pointTwo, pointOne);
+         vec3.sub(vectorV, pointThree, pointOne);
+
+         var currNorm = vec3.fromValues(0,0,0);
+         vec3.cross(currNorm, vectorU, vectorV);
+
+         //currNorm now holds the normal vector for our points
+         vec3.add(vertexNormals[teapotFaceArray[i]], vertexNormals[teapotFaceArray[i]], currNorm);
+         vec3.add(vertexNormals[teapotFaceArray[i+1]], vertexNormals[teapotFaceArray[i+1]], currNorm);
+         vec3.add(vertexNormals[teapotFaceArray[i+2]], vertexNormals[teapotFaceArray[i+2]], currNorm);
+     }
+     //Each vertex now has a normal. We must normalize the normals
+     for(var i = 0; i < vertexNormals.length; i++){
+         vec3.normalize(vertexNormals[i], vertexNormals[i]);
+     }
+     //console.log(vertexNormals.length);
+     //Finally, pass them to the normal array
+     for(var i = 0; i < vertexNormals.length; i++){
+         teapotNormalArray.push(vertexNormals[i][0]);
+         teapotNormalArray.push(vertexNormals[i][1]);
+         teapotNormalArray.push(vertexNormals[i][2]);
+     }
+     //console.log(teapotNormalArray);
+
+     //Create a buffer for the teapot's vertices
+     teapotVertexBuffer = gl.createBuffer();
+
+     //Select the teapotVertexBuffer as the one to apply vertex operations to from here on out
+     gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBuffer);
+
+     //Now pass the list of vertices into webgl to build the shape.
+     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotVertexArray), gl.STATIC_DRAW);
 
    //Build the element array buffer for the teapot
    teapotFaceBuffer = gl.createBuffer();
@@ -745,15 +807,7 @@ var teapotFaceArray = [];
    // //Now pass the list of normals into webgl to build the shape
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotNormalArray), gl.STATIC_DRAW);
 
-    //Create a buffer for the teapot's vertices
-    teapotVertexBuffer = gl.createBuffer();
-
-    //Select the teapotVertexBuffer as the one to apply vertex operations to from here on out
-    gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBuffer);
-
-    //Now pass the list of vertices into webgl to build the shape.
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotVertexArray), gl.STATIC_DRAW);
-
+    console.log("all this stuff's done");
  }
 
 
@@ -763,7 +817,7 @@ var teapotFaceArray = [];
  function startup() {
   canvas = document.getElementById("myGLCanvas");
   gl = createGLContext(canvas);
-  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
 
   readTextFile("resources/teapot_0.obj", importTeaPot);
@@ -781,6 +835,6 @@ var teapotFaceArray = [];
  */
 function tick() {
     requestAnimFrame(tick);
-    draw();
-    animate();
+        draw();
+        animate();
 }
