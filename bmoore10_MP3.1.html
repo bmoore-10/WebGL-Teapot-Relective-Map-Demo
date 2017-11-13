@@ -118,30 +118,20 @@ void main(void) {
     // in eye coordinates as:
     // (0.0, 0.0, 0.0) - vertexPositionEye3
     vec3 viewVectorEye = -normalize(vPosition);
-
+    
+    //Below ensures that we only draw specular reflection for face that warrants it
     float rdotv = 0.0;
     if(diffuseLightWeightning > 0.0){
         rdotv = max(dot(reflectionVector, viewVectorEye), 0.0);
     }
     
-
-
-
     float specularLightWeightning = pow(rdotv, uShininess);
-    //float specularLightWeightning = rdotv * reflectionVector;
 
     // Sum up all three reflection components and send to the fragment shader
-    /*
-    vColor = vec4(((uAmbientLightColor*uAmbientMaterialColor)
-                + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
-                + (uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning),1.0);
-                */
-
     vColor = vec4(((uAmbientLightColor*uAmbientMaterialColor)
                 + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
                 + (uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning),1.0);
 
-   // gl_FragColor = vec4(vNormal.x, vNormal.y, vNormal.z, 1.0);
     gl_FragColor = vColor;
  }
 

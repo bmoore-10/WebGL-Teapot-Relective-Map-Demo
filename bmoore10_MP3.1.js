@@ -10,35 +10,54 @@ var cubeTCoordBuffer;
 // Create a place to store terrain geometry
 var cubeVertexBuffer;
 
+// Create a place to store the "face" values
+var aFaceAttributeBuffer;
+
 // Create a place to store the triangles
 var cubeTriIndexBuffer;
 
 // Create ModelView matrix
 var mvMatrix = mat4.create();
 
-//Create Projection matrix
+// Create Projection matrix
 var pMatrix = mat4.create();
 
-//Create the normal
+// Create the normal
 var nMatrix = mat3.create();
 
+// Create a place to tore the matrix stack
 var mvMatrixStack = [];
 
-//Create a place to store teapot geometry
+// Create normal for teapot
+var nTeapotMatrix = mat3.create();
+
+// Create a place to store teapot geometry
 var teapotVertexBuffer;
 
-//Create a place to store teapot's traingles
+// Create a place to store teapot's traingles
 var teapotFaceBuffer;
 
-// Create a place to store the texture
+// Create a place to store the teapot's normal values
+var teapotNormalBuffer;
 
+// Create a place to store the cube textures
 var cubeImage;
 var cubeTexture;
+
 
 // For animation
 var then = 0;
 var modelXRotationRadians = degToRad(0);
 var modelYRotationRadians = degToRad(0);
+var manualRotate = 0;
+var autoRotate = 0;
+
+// Light position in world
+var lightPos = vec3.fromValues(1, 1, 1);
+
+// Used for animation
+var modelXRotationRadiansTeapot = degToRad(0);
+var modelYRotationRadiansTeapot = degToRad(0);
 
 /**
  * Sends Modelview matrix to shader
@@ -234,7 +253,6 @@ function setupCubeShader() {
   shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
   shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 }
-var aFaceAttributeBuffer;
 /**
  * Draw a cube based on buffers.
  */
@@ -306,8 +324,6 @@ function drawTeapot(){
 }
 
 
-//Create normal for teapot
-var nTeapotMatrix = mat3.create();
 
 /**
  * Setup the fragment and veretx shaders for the teapot
@@ -354,13 +370,14 @@ var viewDir = vec3.fromValues(0.0, 0.0, -1.0);
 var up = vec3.fromValues(0.0, 1.0, 0.0);
 var  viewPt = vec3.fromValues(0.0, 0.0, 0.0);
 
-vec2.add(viewPt, eyePt, viewDir);
+// We want to look down -z, so create a lookat point in that direction
+vec3.add(viewPt, eyePt, viewDir);
 // Then generate the lookat matrix and initialize the MV matrix to that view
 mat4.lookAt(mvMatrix,eyePt,viewPt,up);
 
-//Construct quaternion that records initial/current orientation
+// Construct quaternion that records initial/current orientation
 var currentRotation = quat;
-//obtain initial rotation value from original lookat
+// Obtain initial rotation value from original lookat
 mat4.getRotation(currentRotation, mvMatrix);
 
 /**
@@ -378,23 +395,11 @@ function draw() {
 
     //Capture rotation
     var newRot = quat;
-    quat.fromEuler(newRot, 0, orbitLeft, 0);
+    quat.fromEuler(newRot, 0, manualRotate + autoRotate, 0);
 
     //Apply rotation to current orientation
     quat.multiply(currentRotation, currentRotation, newRot);
-
-    //Apply rotation to light position
-    //vec3.transformQuat(lightPos, lightPos, newRot);
-
-    //Create rotation matrix from current rotation
-    //var rotationMatrix = mat4;
-    //mat4.fromQuat(rotationMatrix, currentRotation);
-
-    //Apply rotation to mvMatrix
-    //mat4.multiply(mvMatrix, rotationMatrix, mvMatrix);
-
-
-    mat4.rotateY(mvMatrix, mvMatrix, degToRad(orbitLeft));
+    mat4.rotateY(mvMatrix, mvMatrix, degToRad(manualRotate + autoRotate));
 
     //Draw the cube
     setupCubeShader();
@@ -429,9 +434,6 @@ function draw() {
     drawTeapot();
     mvPopMatrix();
 }
-var lightPos = vec3.fromValues(1, 1, 1);
-var modelXRotationRadiansTeapot = degToRad(0);
-var modelYRotationRadiansTeapot = degToRad(0);
 
 /**
  * Animation to be called from tick. Updates global rotation values.
@@ -459,7 +461,6 @@ function animate() {
 
     }
 }
-var orbitLeft = 0;
 
 //Handles input from user
 function handleKeys(){
@@ -467,13 +468,19 @@ document.onkeydown = keyDown;
 document.onkeyup = keyUp;
     function keyDown(){
         if(event.key == "ArrowRight")
-            orbitLeft = 1;
+            manualRotate = 1;
         if(event.key == "ArrowLeft")
-            orbitLeft = -1;
+            manualRotate = -1;
+        if(event.key == "Enter"){
+            if(autoRotate == 0)
+                autoRotate = 1;
+            else
+                autoRotate = 0;
+        }
     }
 
     function keyUp(){
-        orbitLeft = 0;
+        manualRotate = 0;
     }
 
 }
@@ -497,12 +504,8 @@ function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
 }
 
-var teapotNormalBuffer;
 /**
  * Sets up buffers for cube.
- */
-/**
- * Populate buffers with data
  */
 function setupBuffers() {
 
@@ -662,6 +665,9 @@ var rightTexture;
 var leftTexture;
 var p2good = 1;
 
+/*
+ * Sets up the textures for the cube map
+ */
 function cubeTexSetup(){
     var posX = new Image();
     posX.onload = function(){
@@ -706,7 +712,9 @@ function cubeTexSetup(){
     }
 
 }
-
+/*
+ * Checks that texture's dimensions are powers of two and creates a texture out of it
+ */
 function createTextureFromImage(image, uniform){
     var texture =  gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -764,23 +772,12 @@ var teapotFaceArray = [];
         }else{
             if(vOri == 0 && doWrite == 1){
                 teapotVertexArray.push(teapotReadyForParse[i] *.05);
-                //teapotVertexArray.push(teapotReadyForParse[i]);
             }else if(doWrite == 1){
                 teapotFaceArray.push(teapotReadyForParse[i] - 1);
             }
 
         }
      }
-
-
-     //Teapot vertex and face arrays are now popualted according to the order in the original object file
-     //Need to get teapotNormals
-/*
-     for (var i = 0; i < teapotVertexArray.length; i++){
-         teapotNormalArray[i] = 1;
-     }
-*/
-
 
      var vertexArrayVectors = [];
 
@@ -792,7 +789,7 @@ var teapotFaceArray = [];
      }
      var vertexNormals = [];
      var normalizedNormals = [];
-     for(var i = 0; i < teapotVertexArray.length/3; i++){
+     for (var i = 0; i < teapotVertexArray.length/3; i++){
          vertexNormals.push( (vec3.fromValues(0,0,0)));
      }
      //console.log("vertexArray length: ", vertexArrayVectors.length);
