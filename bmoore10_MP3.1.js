@@ -428,7 +428,6 @@ function draw() {
 
     drawTeapot();
     mvPopMatrix();
-    //console.log(lightPos);
 }
 var lightPos = vec3.fromValues(1, 1, 1);
 var modelXRotationRadiansTeapot = degToRad(0);
@@ -866,6 +865,14 @@ var teapotFaceArray = [];
     console.log("all this stuff's done");
  }
 
+//Causes the program to sleep for the amount of milliseconds input
+function wait(ms){
+    var start = new Date().getTime();
+    var end = start;
+    while(end < start + ms){
+        end = new Date().getTime();
+    }       
+}
 
 /**
  * Startup function called from html code to start program.
