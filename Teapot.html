@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-<title>bmoore10_MP3.1 </title>
+<title>Teapot</title>
 <meta charset="utf-8">
 </head>
 
@@ -118,13 +118,13 @@ void main(void) {
     // in eye coordinates as:
     // (0.0, 0.0, 0.0) - vertexPositionEye3
     vec3 viewVectorEye = -normalize(vPosition);
-    
+
     //Below ensures that we only draw specular reflection for face that warrants it
     float rdotv = 0.0;
     if(diffuseLightWeightning > 0.0){
         rdotv = max(dot(reflectionVector, viewVectorEye), 0.0);
     }
-    
+
     float specularLightWeightning = pow(rdotv, uShininess);
 
     // Sum up all three reflection components and send to the fragment shader
@@ -145,5 +145,9 @@ void main(void) {
 <script src="readText.js"></script>
 <body onload="startup();">
 <canvas id="myGLCanvas" width="800" height="800"></canvas>
+<br>
+<b>Controls: </b><br>
+Left and Right arrows: Orbit the teapot clockwise and counter-clockwise respectively. <br>
+Enter: Toggle automatic rotating of teapot in counter-clockwise direction.
 </body>
 </html>

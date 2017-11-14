@@ -468,12 +468,12 @@ document.onkeydown = keyDown;
 document.onkeyup = keyUp;
     function keyDown(){
         if(event.key == "ArrowRight")
-            manualRotate = 1;
-        if(event.key == "ArrowLeft")
             manualRotate = -1;
+        if(event.key == "ArrowLeft")
+            manualRotate = 1;
         if(event.key == "Enter"){
             if(autoRotate == 0)
-                autoRotate = 1;
+                autoRotate = -1;
             else
                 autoRotate = 0;
         }
@@ -563,13 +563,7 @@ function setupBuffers() {
   // then use it to fill the current vertex buffer.
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-
-
-
-
-
-  // Map the texture onto the cube's faces.
+    // Map the texture onto the cube's faces.
 
   cubeTCoordBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeTCoordBuffer);
@@ -711,6 +705,8 @@ function cubeTexSetup(){
         console.log("One or more texture is not a power of 2. Please revise");
     }
 
+    console.log("I am done");
+
 }
 /*
  * Checks that texture's dimensions are powers of two and creates a texture out of it
@@ -732,6 +728,7 @@ function createTextureFromImage(image, uniform){
     }
 
     gl.bindTexture(gl.TEXTURE_2D, null);
+    console.log("Texture done being loaded");
     return texture;
 
 }
@@ -868,26 +865,34 @@ function wait(ms){
     var end = start;
     while(end < start + ms){
         end = new Date().getTime();
-    }       
+    }
 }
+
+
 
 /**
  * Startup function called from html code to start program.
  */
- function startup() {
-  canvas = document.getElementById("myGLCanvas");
-  gl = createGLContext(canvas);
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
 
-  readTextFile("resources/teapot_0.obj", importTeaPot);
-  console.log("Teapot loaded");
 
-  setupTextures();
-  cubeTexSetup();
-  setupBuffers();
+function startup(){
+    canvas = document.getElementById("myGLCanvas");
+    gl = createGLContext(canvas);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
 
-  tick();
+    readTextFile("resources/teapot_0.obj", importTeaPot);
+    console.log("Teapot loaded");
+
+    cubeTexSetup();
+    setupCubeShader();
+
+    setupTextures();
+    setupBuffers();
+
+    tick();
+
+
 }
 
 /**
