@@ -306,7 +306,6 @@ function drawCube(){
 }
 
 
-
 /**
  * Draw the teapot based on buffers
  */
@@ -711,6 +710,7 @@ function cubeTexSetup(){
         console.log("One or more texture is not a power of 2. Please revise");
     }
 
+    createCubeMap();
 }
 /*
  * Checks that texture's dimensions are powers of two and creates a texture out of it
@@ -734,6 +734,39 @@ function createTextureFromImage(image, uniform){
     gl.bindTexture(gl.TEXTURE_2D, null);
     return texture;
 
+}
+
+/*
+ * Helper function for createCubeTex, creates a proper cube map of the texture images
+ */
+function createCubeMap(){
+    var cubeMapTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMapTex);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    var cubeFace = [["resources/pos-x.png", gl.TEXTURE_CUBE_MAP_POSITIVE_X],
+                    ["resources/pos-y.png", gl.TEXTURE_CUBE_MAP_POSITIVE_Y],
+                    ["resources/pos-z.png", gl.TEXTURE_CUBE_MAP_POSITIVE_Z],
+                    ["resources/neg-x.png", gl.TEXTURE_CUBE_MAP_NEGATIVE_X],
+                    ["resources/neg-y.png", gl.TEXTURE_CUBE_MAP_NEGATIVE_Y],
+                    ["resources/neg-z.png", gl.TEXTURE_CUBE_MAP_NEGATIVE_Z]];
+
+    for(var i = 0; i < cubeFace.length; i++){
+        var currFace = cubeFace[i][1];
+        var image = new Image();
+        image.onload = function(cubeMapTex, currFace, image){
+            return function(){
+                gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMapTex);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                gl.texImage2D(currFace, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            }
+        } (cubeMapTex, currFace, image);
+        image.src = cubeFace[i][0];
+    }
+    return cubeMapTex;
 }
 
 var teapotVertexArray = [];
