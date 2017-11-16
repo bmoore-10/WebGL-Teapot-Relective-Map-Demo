@@ -373,6 +373,7 @@ function setupTeapotShader(){
     shaderProgram.front = gl.getUniformLocation(shaderProgram, "front");
     shaderProgram.back = gl.getUniformLocation(shaderProgram, "back");
     shaderProgram.fullTexMap = gl.getUniformLocation(shaderProgram, "fullTexMap");
+    shaderProgram.reflectionRotationVector = gl.getUniformLocation(shaderProgram, "refTransform");
 
 }
 
@@ -392,6 +393,9 @@ var currentRotation = quat;
 // Obtain initial rotation value from original lookat
 mat4.getRotation(currentRotation, mvMatrix);
 
+// Rotation matrix to send to shader
+var rotReflect = mat3;
+
 /**
  * Draw call that applies matrix transformations to cube
  */
@@ -408,7 +412,7 @@ function draw() {
     //Capture rotation
     var newRot = quat;
     quat.fromEuler(newRot, 0, manualRotate + autoRotate, 0);
-
+    
     //Apply rotation to current orientation
     quat.multiply(currentRotation, currentRotation, newRot);
     mat4.rotateY(mvMatrix, mvMatrix, degToRad(manualRotate + autoRotate));

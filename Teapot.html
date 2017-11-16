@@ -76,10 +76,10 @@ attribute vec3 teapotNormals;
       vPosition = vertexPositionEye4.xyz / vertexPositionEye4.w;
       //Calculate the normal
       vNormal = normalize(uNMatrix * teapotNormals);
+
       gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
 
   }
-
 
 </script>
 
@@ -99,12 +99,11 @@ uniform float uShininess;
 
 uniform samplerCube cubeSampler;
 uniform sampler2D   fullTexMap;
+uniform mat3        refTransform;
 
 void main(void) {
 
     vec4 vColor;
-
-    //vec3 test = vec3(vTexCoordTeapot, 1.0);
 
     // Calculate the vector (l) to the light source
     vec3 vectorToLightSource = normalize(uLightPosition - vPosition);
@@ -116,6 +115,11 @@ void main(void) {
     // Calculate the reflection vector (r) that is needed for specular light
     vec3 reflectionVector = normalize(reflect(-vectorToLightSource,
                                              vNormal));
+
+    vec3 testVec;
+    testVec = vec3(0.0, 0.0, 0.0);
+
+    reflectionVector = reflectionVector * testVec;
 
     // The camera in eye coordinates is located in the origin and is pointing
     // along the negative z-axis. Calculate viewVector (v)
@@ -135,7 +139,7 @@ void main(void) {
     vColor = vec4(((uAmbientLightColor*uAmbientMaterialColor)
                 + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
                 + (uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning),1.0);
-
+      
 //    gl_FragColor = vColor;
     gl_FragColor = textureCube(cubeSampler, reflectionVector);
  }
