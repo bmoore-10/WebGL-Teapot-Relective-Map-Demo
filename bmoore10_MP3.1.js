@@ -48,7 +48,7 @@ var cubeTexture;
 // For animation
 var then = 0;
 var modelXRotationRadians = degToRad(0);
-var modelYRotationRadians = degToRad(0);
+var modelYRotationRadians = degToRad(-215);
 var manualRotate = 0;
 var autoRotate = 0;
 
@@ -378,7 +378,7 @@ function setupTeapotShader(){
 }
 
 //View parameters
-var eyePt = vec3.fromValues(0.0, 0.1, 1.0);
+var eyePt = vec3.fromValues(0.0, 0.1, 0.5);
 var viewDir = vec3.fromValues(0.0, 0.0, -1.0);
 var up = vec3.fromValues(0.0, 1.0, 0.0);
 var  viewPt = vec3.fromValues(0.0, 0.0, 0.0);
@@ -396,6 +396,8 @@ mat4.getRotation(currentRotation, mvMatrix);
 // Rotation matrix to send to shader
 var rotReflect = mat3;
 
+var newRotMat = mat3.create();
+
 /**
  * Draw call that applies matrix transformations to cube
  */
@@ -412,10 +414,13 @@ function draw() {
     //Capture rotation
     var newRot = quat;
     quat.fromEuler(newRot, 0, manualRotate + autoRotate, 0);
-    
+
     //Apply rotation to current orientation
     quat.multiply(currentRotation, currentRotation, newRot);
     mat4.rotateY(mvMatrix, mvMatrix, degToRad(manualRotate + autoRotate));
+
+    mat3.fromMat4(newRotMat, mvMatrix);
+    //mat3.invert(newRotMat, newRotMat);
 
 
     //Draw the cube
@@ -435,8 +440,9 @@ function draw() {
     mvPushMatrix();
     vec3.set(transformVec, 0.0, 0.0, 0.0);
     mat4.translate(mvMatrix, mvMatrix, transformVec);
-    mat4.rotateX(mvMatrix, mvMatrix, modelXRotationRadiansTeapot);
-    mat4.rotateY(mvMatrix, mvMatrix, modelYRotationRadiansTeapot);
+    mat4.rotateX(mvMatrix, mvMatrix, modelXRotationRadiansTeapot + degToRad(potUp));
+    mat4.rotateY(mvMatrix, mvMatrix, modelYRotationRadiansTeapot + degToRad(potRight));
+
 
     R=1.0; G=0.0; B=0.0; shiny=50.0;
 
@@ -447,11 +453,11 @@ function draw() {
 
     setMatrixUniforms();
     uploadNormalMatrixToShader();
+    gl.uniformMatrix3fv(shaderProgram.reflectionRotationVector, false, newRotMat);
 
     drawTeapot();
     mvPopMatrix();
 }
-
 /**
  * Animation to be called from tick. Updates global rotation values.
  */
@@ -474,10 +480,13 @@ function animate() {
         //modelXRotationRadians += 1.2 * deltaTime;
         //modelXRotationRadians = degToRad(15);
         modelYRotationRadians += 0 * deltaTime;
-        modelYRotationRadiansTeapot += 1 * deltaTime;
+        modelYRotationRadiansTeapot += 0 * deltaTime;
 
     }
 }
+
+potUp = 0;
+potRight = 0;
 
 //Handles input from user
 function handleKeys(){
@@ -494,6 +503,14 @@ document.onkeyup = keyUp;
             else
                 autoRotate = 0;
         }
+        if(event.key == "w")
+            potUp += 1;
+        if(event.key == "s")
+            potUp += -1;
+        if(event.key == "a")
+            potRight += -1;
+        if(event.key == "d")
+            potRight += 1;
     }
 
     function keyUp(){

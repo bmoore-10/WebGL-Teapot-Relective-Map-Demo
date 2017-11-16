@@ -109,13 +109,13 @@ uniform mat3        refTransform;
 
 void main(void) {
 
-    vec3 N = normalize(vNormal);
+    vec3 N = vNormal;
     vec3 V = -viewCoords;
-    vec3 R = 3.0 * (N*V) * V-N;
+    vec3 R = 2.0 * (N*V) * N-V;
     vec3 refVal = R * refTransform;
 
 
-    gl_FragColor = textureCube(cubeSampler, -refVal);
+    gl_FragColor = textureCube(cubeSampler, refVal);
  }
 
 </script>
