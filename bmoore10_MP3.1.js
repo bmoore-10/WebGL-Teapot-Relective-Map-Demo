@@ -305,11 +305,13 @@ function drawCube(){
   gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
 }
 
-
+var texCoordBufferTwo;
 /**
  * Draw the teapot based on buffers
  */
 function drawTeapot(){
+
+
     gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
@@ -319,6 +321,7 @@ function drawTeapot(){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotFaceBuffer);
     setMatrixUniforms();
     gl.drawElements(gl.TRIANGLES, 6768, gl.UNSIGNED_SHORT, 0);
+
 
 }
 
@@ -361,6 +364,16 @@ function setupTeapotShader(){
     shaderProgram.uniformSpecularMaterialColor = gl.getUniformLocation(shaderProgram, "uSpecularMaterialColor");
     shaderProgram.uniformShininess = gl.getUniformLocation(shaderProgram, "uShininess");
 
+    shaderProgram.uniformCubeMap = gl.getUniformLocation(shaderProgram, "cubeSampler");
+
+    shaderProgram.up = gl.getUniformLocation(shaderProgram, "top");
+    shaderProgram.left = gl.getUniformLocation(shaderProgram, "left");
+    shaderProgram.down = gl.getUniformLocation(shaderProgram, "bottom");
+    shaderProgram.right = gl.getUniformLocation(shaderProgram, "right");
+    shaderProgram.front = gl.getUniformLocation(shaderProgram, "front");
+    shaderProgram.back = gl.getUniformLocation(shaderProgram, "back");
+    shaderProgram.fullTexMap = gl.getUniformLocation(shaderProgram, "fullTexMap");
+
 }
 
 //View parameters
@@ -399,6 +412,7 @@ function draw() {
     //Apply rotation to current orientation
     quat.multiply(currentRotation, currentRotation, newRot);
     mat4.rotateY(mvMatrix, mvMatrix, degToRad(manualRotate + autoRotate));
+
 
     //Draw the cube
     setupCubeShader();
@@ -456,7 +470,7 @@ function animate() {
         //modelXRotationRadians += 1.2 * deltaTime;
         //modelXRotationRadians = degToRad(15);
         modelYRotationRadians += 0 * deltaTime;
-        modelYRotationRadiansTeapot += 0 * deltaTime;
+        modelYRotationRadiansTeapot += 1 * deltaTime;
 
     }
 }
@@ -603,6 +617,7 @@ function setupBuffers() {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
                 gl.STATIC_DRAW);
 
+
   // Build the element array buffer; this specifies the indices
   // into the vertex array for each face's vertices.
 
@@ -662,6 +677,8 @@ var p2good = 1;
  * Sets up the textures for the cube map
  */
 function cubeTexSetup(){
+    createCubeMap();
+    wait(1000);
     var posX = new Image();
     posX.onload = function(){
         rightTexture = createTextureFromImage(posX, shaderProgram.right);
@@ -704,12 +721,9 @@ function cubeTexSetup(){
         console.log("One or more texture is not a power of 2. Please revise");
     }
 
-<<<<<<< HEAD
     console.log("I am done");
 
-=======
-    createCubeMap();
->>>>>>> 9750a43a879d42e10a4ed02efbaf55375572736d
+
 }
 /*
  * Checks that texture's dimensions are powers of two and creates a texture out of it

@@ -67,6 +67,7 @@ attribute vec3 teapotNormals;
   uniform mat3 uNMatrix;
   varying vec3 vNormal;
   varying vec3 vPosition;
+  varying vec2 vTexCoordTeapot;
 
   void main(void){
 
@@ -74,11 +75,8 @@ attribute vec3 teapotNormals;
       vec4 vertexPositionEye4 = uMVMatrix * vec4(teapotVertices, 1.0);
       vPosition = vertexPositionEye4.xyz / vertexPositionEye4.w;
       //Calculate the normal
-      //vNormal = normalize(uNMatrix * teapotNormals);
-      vNormal = teapotNormals;
-
+      vNormal = normalize(uNMatrix * teapotNormals);
       gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
-      //gl_Position = vec4(teapotVertices, 1.0);
 
   }
 
@@ -98,11 +96,16 @@ uniform vec3 uAmbientMaterialColor;
 uniform vec3 uDiffuseMaterialColor;
 uniform vec3 uSpecularMaterialColor;
 uniform float uShininess;
-uniform samplerCube cubeMapSampler;
+
+uniform samplerCube cubeSampler;
+uniform sampler2D   fullTexMap;
 
 void main(void) {
 
     vec4 vColor;
+
+    //vec3 test = vec3(vTexCoordTeapot, 1.0);
+
     // Calculate the vector (l) to the light source
     vec3 vectorToLightSource = normalize(uLightPosition - vPosition);
 
@@ -133,7 +136,8 @@ void main(void) {
                 + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
                 + (uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning),1.0);
 
-    gl_FragColor = vColor;
+//    gl_FragColor = vColor;
+    gl_FragColor = textureCube(cubeSampler, reflectionVector);
  }
 
 </script>
