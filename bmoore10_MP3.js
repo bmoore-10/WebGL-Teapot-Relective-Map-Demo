@@ -252,6 +252,11 @@ function setupCubeShader() {
 
   shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
   shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+
+
+
+
+
 }
 /**
  * Draw a cube based on buffers.
@@ -311,6 +316,10 @@ var texCoordBufferTwo;
  */
 function drawTeapot(){
 
+    var whichShader = document.getElementById("reflect");
+
+
+    gl.uniform1i(shaderProgram.whichShader, whichShader.checked);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
@@ -321,7 +330,6 @@ function drawTeapot(){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotFaceBuffer);
     setMatrixUniforms();
     gl.drawElements(gl.TRIANGLES, 6768, gl.UNSIGNED_SHORT, 0);
-
 
 }
 
@@ -375,6 +383,7 @@ function setupTeapotShader(){
     shaderProgram.fullTexMap = gl.getUniformLocation(shaderProgram, "fullTexMap");
     shaderProgram.reflectionRotationVector = gl.getUniformLocation(shaderProgram, "refTransform");
 
+    shaderProgram.whichShader = gl.getUniformLocation(shaderProgram, "useTexture");
 }
 
 //View parameters
