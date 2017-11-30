@@ -81,12 +81,6 @@ attribute vec3 teapotNormals;
       gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
 
       viewCoords = vertexPositionEye4.xyz;
-
-
-
-
-
-
   }
 
 </script>
@@ -174,13 +168,7 @@ void main(void) {
 
     <input type ="radio" id="phong" name="shader" value="phong">
     <label for="phong">Phong Shading</label>
-
-
 </form>
-<br>
-<b>NOTICE</b><br>
-Sometimes the teapot loads too fast for its textures. If the teapot is rendered as all black, <b>please refresh the page.</b><br>
-If it occurs, the problem usually persists between 2 refreshes at most <br>
 <b>Controls: </b><br>
 Left and Right arrows: Orbit the teapot clockwise and counter-clockwise respectively. <br>
 A and D keys: Rotate the teapot clockwise and counter-clockwise respectively. <br>

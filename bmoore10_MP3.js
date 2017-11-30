@@ -708,7 +708,7 @@ var p2good = 1;
  */
 function cubeTexSetup(){
     createCubeMap();
-    wait(1000);
+
     var posX = new Image();
     posX.onload = function(){
         rightTexture = createTextureFromImage(posX, shaderProgram.right);
@@ -754,6 +754,7 @@ function cubeTexSetup(){
     console.log("I am done");
 
 
+
 }
 /*
  * Checks that texture's dimensions are powers of two and creates a texture out of it
@@ -776,6 +777,7 @@ function createTextureFromImage(image, uniform){
 
     gl.bindTexture(gl.TEXTURE_2D, null);
     console.log("Texture done being loaded");
+    wait(40);
     return texture;
 
 }
@@ -966,9 +968,10 @@ function startup(){
 
     cubeTexSetup();
     setupCubeShader();
-
     setupTextures();
     setupBuffers();
+
+    wait(500);
 
     tick();
 

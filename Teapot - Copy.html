@@ -76,9 +76,12 @@ attribute vec3 teapotNormals;
       //Get the vertex position in eye textureCoordinates
       vec4 vertexPositionEye4 = uMVMatrix * vec4(teapotVertices, 1.0);
 
+      vPosition = vertexPositionEye4.xyz/vertexPositionEye4.w;
+
       gl_Position = uPMatrix*uMVMatrix*vec4(teapotVertices, 1.0);
 
       viewCoords = vertexPositionEye4.xyz;
+
 
 
 
@@ -102,6 +105,7 @@ uniform vec3 uAmbientMaterialColor;
 uniform vec3 uDiffuseMaterialColor;
 uniform vec3 uSpecularMaterialColor;
 uniform float uShininess;
+uniform bool useTexture;
 
 uniform samplerCube cubeSampler;
 uniform sampler2D   fullTexMap;
@@ -109,13 +113,47 @@ uniform mat3        refTransform;
 
 void main(void) {
 
-    vec3 N = vNormal;
-    vec3 V = -viewCoords;
-    vec3 R = 2.0 * (N*V) * N-V;
+    //Texture gen
+    vec3 N = normalize(vNormal);
+    vec3 V = viewCoords;
+    vec3 R = 2.0 * dot(V,N) * N-V;
     vec3 refVal = R * refTransform;
 
+    //Phong shading gen
 
-    gl_FragColor = textureCube(cubeSampler, refVal);
+    vec4 vColor;
+    vec3 vectorTolightSource = normalize(uLightPosition - vPosition);
+
+    float diffuseLightWeightning = max(dot(vNormal, vectorTolightSource), 0.0);
+
+    vec3 reflectionVector = normalize(reflect(-vectorTolightSource, vNormal));
+
+    vec3 viewVectorEye = -normalize(vPosition);
+
+    vec3 halfway = normalize(vectorTolightSource + viewVectorEye);
+
+    float nDotH = max(dot(vNormal, halfway), 0.0);
+
+    float specTerm = pow(nDotH, uShininess);
+
+    float rdotv = 0.0;
+
+    if(diffuseLightWeightning > 0.0){
+        rdotv = max(dot(reflectionVector, viewVectorEye), 0.0);
+    }
+
+    float specularLightWeightning = pow(rdotv, uShininess);
+
+    vColor = vec4(((uAmbientLightColor*uAmbientMaterialColor)
+             + (uDiffuseLightColor*uDiffuseMaterialColor) * diffuseLightWeightning
+             + (specTerm*uSpecularMaterialColor) * specularLightWeightning),1.0);
+
+
+    if(useTexture){
+        gl_FragColor = textureCube(cubeSampler, -refVal);
+    }else{
+        gl_FragColor = vColor;
+    }
  }
 
 </script>
@@ -124,13 +162,26 @@ void main(void) {
 <script src="gl-matrix.js"></script>
 <script src="webgl-utils.js"></script>
 <script src="terrainModeling.js"></script>
-<script src="bmoore10_MP3.1.js"></script>
+<script src="bmoore10_MP3.js"></script>
 <script src="readText.js"></script>
 <body onload="startup();">
 <canvas id="myGLCanvas" width="800" height="800"></canvas>
-<br>
+<form>
+<b>Teapot shading options:</b>
+
+    <input type ="radio" id="reflect" name="shader" value="reflect" checked>
+    <label for="reflect">Reflect Environment</label>
+
+    <input type ="radio" id="phong" name="shader" value="phong">
+    <label for="phong">Phong Shading</label>
+</form>
+
+<b>NOTICE</b><br>
+Sometimes the teapot loads too fast for its textures. If the teapot is rendered as all black, <b>please refresh the page.</b><br>
+If it occurs, the problem usually persists between 2 refreshes at most <br>
 <b>Controls: </b><br>
 Left and Right arrows: Orbit the teapot clockwise and counter-clockwise respectively. <br>
+A and D keys: Rotate the teapot clockwise and counter-clockwise respectively. <br>
 Enter: Toggle automatic rotating of teapot in counter-clockwise direction.
 </body>
 </html>
